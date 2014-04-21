@@ -3,13 +3,13 @@
 'use strict';
 
 function buildCljsbuildCommandString(
-  leinProfile, 
+  leinProfile,
   buildType,
   target) {
 
   var p = leinProfile ? 'with-profile ' + leinProfile : '';
   var cmd = 'lein ' + p + ' cljsbuild ' + buildType + ' ' + target;
-  return cmd  
+  return cmd
 }
 
 function createConfig() {
@@ -18,9 +18,6 @@ function createConfig() {
     dist: 'dist',
     distClient: 'dist/public',
     distServer: 'dist',
-    // cljsbuild's target directory for dumping server JS data
-    generatedServerDir: 'target/server',
-    generatedServerTestDir: 'target/test/server',
     // cljsbuild's target directory for dumping client JS data
     generatedClientDir: 'target/public',
     generatedClientTestDir: 'target/test/client'
@@ -31,12 +28,6 @@ function createConfig() {
 
   // cljsbuild's artifact for the client tests
   config.generatedClientTestMainJs = config.generatedClientTestDir + '/' + 'main.js';
-
-  // cljsbuild's artifact for the main server JS
-  config.generatedServerMainJs = config.generatedServerDir + '/' + 'main.js';
-
-  // cljsbuild's artifact for the main server test
-  config.generatedServerTestMainJs = config.generatedServerTestDir + '/' + 'main.js';
 
   return config;
 }
@@ -58,22 +49,9 @@ module.exports = function (grunt) {
           livereload: true
         }
       },
-      serverJs: {
-        files: ['<%= config.generatedServerMainJs %>'],
-        options: {
-          livereload: true
-        }
-      },
       clientTest: {
         files: ['<%= config.generatedClientTestMainJs %>'],
         tasks: ['bgShell:clientTest'],
-        options: {
-          livereload: false
-        }
-      },
-      serverTest: {
-        files: ['<%= config.generatedServerTestMainJs %>'],
-        tasks: ['bgShell:serverTest'],
         options: {
           livereload: false
         }
@@ -261,27 +239,6 @@ module.exports = function (grunt) {
     },
 
     bgShell: {
-      nodeServer: {
-        cmd: './node_modules/.bin/supervisor -w <%= config.generatedServerMainJs %> -n -- <%= config.generatedServerMainJs %>',
-        bg: true,
-        stdout: true,
-        stderr: true
-      },
-      cljsBuildOnceServer: {
-        cmd: buildCljsbuildCommandString(null, 'once', 'server'),
-        bg: false,
-        fail: true
-      },
-      cljsBuildOnceServerTest: {
-        cmd: buildCljsbuildCommandString(null, 'once', 'server-test'),
-        bg: false,
-        fail: true
-      },
-      cljsBuildOnceServerDist: {
-        cmd: buildCljsbuildCommandString('production', 'once', 'server'),
-        bg: false,
-        fail: true
-      },
       cljsBuildOnceClient: {
         cmd: buildCljsbuildCommandString(null, 'once', 'client'),
         bg: false,
@@ -296,18 +253,6 @@ module.exports = function (grunt) {
         cmd: buildCljsbuildCommandString('production', 'once', 'client'),
         bg: false,
         fail: true
-      },
-      cljsBuildAutoServer: {
-        cmd: buildCljsbuildCommandString(null, 'auto', 'server'),
-        bg: true,
-        stdout: true,
-        stderr: true
-      },
-      cljsBuildAutoServerTest: {
-        cmd: buildCljsbuildCommandString(null, 'auto', 'server-test'),
-        bg: true,
-        stdout: true,
-        stderr: true
       },
       cljsBuildAutoClient: {
         cmd: buildCljsbuildCommandString(null, 'auto', 'client'),
@@ -339,19 +284,9 @@ module.exports = function (grunt) {
           var testRunner = 'scripts/phantomjs-specljs-runner.js'
 
           var cmd = [phantom, testRunner].concat(
-            phantomPolyfills, 
+            phantomPolyfills,
             deps).join(' ');
 
-          return cmd;
-        },
-        bg: false,
-        stdout: true,
-        stderr: true,
-        fail: true
-      },
-      serverTest: {
-        cmd: function() {
-          var cmd = ['node', grunt.config('config.generatedServerTestMainJs')].join(' ');
           return cmd;
         },
         bg: false,
@@ -395,15 +330,6 @@ module.exports = function (grunt) {
           src: [
             '**/*'
           ]
-        },
-        {
-          expand: true,
-          dot: true,
-          cwd: '<%= config.generatedServerDir %>',
-          dest: '<%= config.distServer %>',
-          src: [
-            '**/*'
-          ]
         }]
       },
       styles: {
@@ -418,10 +344,8 @@ module.exports = function (grunt) {
     // Run some tasks in parallel to speed up build process
     concurrent: {
       server: [
-        'compass:server', 
-        'copy:styles', 
-        'bgShell:cljsBuildOnceServer', 
-        'bgShell:cljsBuildOnceClient'
+        'compass:server',
+        'copy:styles'
       ],
       test: [
         'copy:styles'
@@ -429,12 +353,11 @@ module.exports = function (grunt) {
       dist: [
         'compass',
         'copy:styles',
-        'bgShell:cljsBuildOnceServerDist', 
         'bgShell:cljsBuildOnceClientDist'
       ]
     }
   });
- 
+
   grunt.registerTask('serve', function (target) {
     if (target === 'dist') {
       return grunt.task.run(['build', 'connect:dist:keepalive']);
@@ -444,16 +367,13 @@ module.exports = function (grunt) {
     var tasks = [].concat(
       [ 'clean:server',
         'concurrent:server',
-        'bgShell:cljsBuildAutoClient',
-        'bgShell:cljsBuildAutoServer'],
+        'bgShell:cljsBuildAutoClient'],
 
       withTests? [
-        'bgShell:cljsBuildAutoClientTest',
-        'bgShell:cljsBuildAutoServerTest']
+        'bgShell:cljsBuildAutoClientTest']
         : [],
 
-      [ 'bgShell:nodeServer',
-        'autoprefixer',
+      [ 'autoprefixer',
         'configureProxies:server',
         'connect:livereload',
         'watch'])
@@ -462,20 +382,13 @@ module.exports = function (grunt) {
   });
 
   grunt.registerTask('generatePackageJson', function() {
-    // This is an ugly bit of code to generate the package.json for the 
-    // distribution. Basically, it just copies the existing package.json and 
+    // This is an ugly bit of code to generate the package.json for the
+    // distribution. Basically, it just copies the existing package.json and
     // updates the start script setting to point to the correct file.
     var path = require('path');
     var dist = grunt.config('config.dist');
-    var distServer = grunt.config('config.distServer');
-    var generatedServerDir = grunt.config('config.generatedServerDir');
-    var generatedServerMainJs = grunt.config('config.generatedServerMainJs');
-    var mainJsRelative = path.relative(generatedServerDir, generatedServerMainJs);
-    var distServerRelative = path.relative(dist, distServer);
-    var mainServerPath = path.join(distServerRelative, mainJsRelative);
     var pkg = grunt.file.readJSON('package.json');
     delete pkg.devDependencies;
-    pkg.scripts.start = 'node ' + mainServerPath;
     var targetPkgPath = path.join(dist, 'package.json');
     grunt.file.write(targetPkgPath, JSON.stringify(pkg, undefined, 2));
   });
@@ -497,9 +410,7 @@ module.exports = function (grunt) {
   grunt.registerTask('test', [
     'clean:dist',
     'bgShell:cljsBuildOnceClientTest',
-    'bgShell:clientTest',
-    'bgShell:cljsBuildOnceServerTest',
-    'bgShell:serverTest'
+    'bgShell:clientTest'
   ]);
 
   grunt.registerTask('default', [

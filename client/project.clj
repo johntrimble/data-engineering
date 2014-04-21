@@ -1,5 +1,5 @@
-(defproject lschallenge "0.0.0-SNAPSHOT"
-  :description "lschallenge"
+(defproject lschallenge-client "0.0.0-SNAPSHOT"
+  :description "lschallenge client"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2173"]
                  [om "0.4.2"]
@@ -22,23 +22,7 @@
                                          :closure-warnings {:externs-validation :off
                                                             :non-standard-jsdoc :off}}}}}}}
 
-  :cljsbuild {:builds {:server
-                       {:source-paths ["src/common" "src/server" "src/server-bootstrap"]
-                        :compiler {:output-to "target/server/main.js"
-                                   :target :nodejs
-                                   :output-dir "target/server/out"
-                                   :source-map "target/server/main.js.map"
-                                   :language-in :ecmascript5
-                                   :optimizations :simple}}
-                       :server-test
-                       {:source-paths ["src/common" "src/server" "test/server"]
-                        :compiler {:output-to "target/test/server/main.js"
-                                   :target :nodejs
-                                   :output-dir "target/test/server/out"
-                                   :source-map "target/test/server/main.js.map"
-                                   :language-in :ecmascript5
-                                   :optimizations :simple}}
-                       :client
+  :cljsbuild {:builds {:client
                        {:source-paths ["src/common" "src/client" "src/client-bootstrap"]
                         :compiler {:output-to "target/public/scripts/main.js"
                                    :output-dir "target/public/scripts/out"

@@ -1,7 +1,8 @@
+.DS_Store
 node_modules
 target
 .lein-*
-app/bower_components
+bower_components
 .sass-cache
 .tmp
 dist
