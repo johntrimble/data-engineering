@@ -3,5 +3,5 @@
 
 (enable-console-print!)
 
-(insert-root-component! (.getElementById js/document "features"))
-(load-features!)
+(insert-root-component! (.getElementById js/document "om-root"))
+#(load-features!)

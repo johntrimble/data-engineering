@@ -10,9 +10,9 @@
     ;; is a reserved word in older JS versions.
     (doto app
       (.use ((aget express "static") (str js/__dirname "/public")))
-      (.get "/api/features" handlers/features-handler)
-      (.get "/api/hello" handlers/hello-handler)
-      (.get "/api/error" (fn [req res] (throw (js/Error "Bad happened")))))
+      (.use (.limit express "500mb"))
+      (.use (.bodyParser express))
+      (.post "/api/upload" handlers/file-upload))
 
     (.listen app 4000)
     (.log js/console "Site available at http://localhost:4000")))
