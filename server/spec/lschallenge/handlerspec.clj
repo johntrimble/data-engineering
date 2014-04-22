@@ -66,14 +66,17 @@ Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
 
           (it "provides a count of records successfully imported"
               (should= 2 (:import-count @report)))
+
           (it "provides a count of failed record imports"
               (should= 1 (:error-count @report)))
+
           (it "provides a collection of records in error"
               (should= 1 (count (:errors @report)))
               (should= "Phil Harmonic" (-> @report
                                            :errors
                                            first
                                            :purchaser)))
+
           (it "indicates the amount of revenue imported"
               (should= 8685 (:revenue @report))))
 
