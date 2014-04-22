@@ -4,38 +4,7 @@
             [goog.string :as gstring]
             [goog.string.format]))
 
-(def app-state (atom {:whoami {:name "Bob Bobber"}
-                      :oauth-providers [{:type :googleplus}
-                                        {:type :github}]
-                      :csv-upload {:url ""
-                                   :import-progress-url ""
-                                   :status :upload}}))
-
-(def login-view-data {:googleplus {:btn-class "btn-google-plus"
-                                   :icon-class "fa-google-plus"
-                                   :text "Sign in with Google Plus"}
-                      :github {:btn-class "btn-github"
-                               :icon-class "fa-github"
-                               :text "Sign in with GitHub"}})
-
-(defn login-provider-view [provider owner]
-  (reify
-    om/IRender
-    (render [this]
-            (let [{:keys [btn-class icon-class text]} (login-view-data (:type provider))]
-              (dom/a #js {:className (str "btn btn-block btn-social " btn-class)}
-                     (dom/i #js {:className (str "fa " icon-class)})
-                     text)))))
-
-(defn logins-view [providers owner]
-  (reify
-    om/IRender
-    (render
-     [this]
-     (dom/div #js {:className "login"}
-              (dom/h1 nil "Please Login")
-              (apply dom/div nil
-                     (om/build-all login-provider-view providers))))))
+(def app-state (atom {:csv-upload {:status :upload}}))
 
 ;; WARNING: The following function is horrifying
 (defn send-file [file csv-upload]
@@ -83,75 +52,95 @@
                                  ;; not so successful
                                  (om/transact! csv-upload
                                                (fn [oldstate]
-                                                 (merge oldstate {:status :error}))))))))
+                                                 (merge oldstate {:status :error}))))))
+                           false))
       (.send fd))))
 
-(defn upload-view [csv-upload owner]
+(defn reset-file-upload [csv-upload]
+  (om/transact! csv-upload (fn [_] {:status :upload})))
+
+(defmulti upload-view (fn [csv-upload _] (:status csv-upload)))
+
+(defmethod upload-view :uploading
+  [csv-upload owner]
   (reify
     om/IRender
-    (render
-     [this]
+    (render [this]
+            (let [{:keys [loaded size]} csv-upload
+                  percent (if (and loaded size)
+                            (/ loaded size)
+                            0.0)
+                  percent-str (str (int (* 100 percent)))]
+              (dom/div #js {:className "progress"}
+                       (dom/div #js {:className "progress-bar"
+                                     :role "progressbar"
+                                     :aria-valuenow percent-str
+                                     :aria-value-min "0"
+                                     :aria-value-max "100"
+                                     :style #js {:width (str percent-str "%")}}
+                                (str percent-str "%")))))))
 
-     ;; TODO: multimethod?
-     (case (:status csv-upload)
-       :uploading
-       (let [{:keys [loaded size]} csv-upload
-             percent (if (and loaded size)
-                          (/ loaded size)
-                          0.0)
-             percent-str (str (int (* 100 percent)))]
-         (dom/div #js {:className "upload"}
-                  (dom/h1 nil "CSV Import")
-                  (dom/div #js {:className "progress"}
-                           (dom/div #js {:className "progress-bar"
-                                         :role "progressbar"
-                                         :aria-valuenow percent-str
-                                         :aria-value-min "0"
-                                         :aria-value-max "100"
-                                         :style #js {:width (str percent-str "%")}}
-                                    (str percent-str "%")))))
+(defmethod upload-view :upload-finished
+  [csv-upload owner]
+  (reify
+    om/IRender
+    (render [this]
+     (dom/p nil (str "Done uploading " (:file-name csv-upload) ". Waiting for import job to complete...")))))
 
-       :upload-finished
-       (dom/div #js {:className "upload"}
-                (dom/h1 nil "CSV Import")
-                (dom/p nil (str "Done uploading " (:file-name csv-upload) ". Waiting for import job to complete...")))
+(defmethod upload-view :error
+  [csv-upload owner]
+  (reify
+    om/IRender
+    (render [this]
+            (dom/div nil
+                     (dom/p nil (str "Could not upload " (:file-name csv-upload) "."))
+                     (dom/p nil
+                            (dom/a #js {:onClick #(reset-file-upload csv-upload)}
+                                   "Try another file?"))))))
 
+(defmethod upload-view :abort
+  [csv-upload owner]
+  (reify
+    om/IRender
+    (render [this]
+            (dom/div nil
+                     (dom/p nil (str "Upload of " (:file-name csv-upload) " was canceled."))
+                     (dom/p nil
+                            (dom/a #js {:onClick #(reset-file-upload csv-upload)}
+                                   "Try another file?"))))))
 
-       :error
-       (dom/div #js {:className "upload"}
-                (dom/h1 nil "CSV Import")
-                (dom/p nil (str "Could not upload " (:file-name csv-upload) ".")))
+(defmethod upload-view :done
+  [csv-upload owner]
+  (reify
+    om/IRender
+    (render [this]
+            (dom/div nil
+                     (dom/p nil
+                            (str "Import complete! "
+                                 (:import-count csv-upload) " records were imported. "
+                                 (:error-count csv-upload) " records failed to import. "
+                                 (gstring/format "$%.2f" (/ (:revenue csv-upload) 100)) " of revenue imported."))
+                     (dom/p nil
+                            (dom/a #js {:onClick #(reset-file-upload csv-upload)}
+                                   "Upload another file?"))))))
 
-       :abort
-       (dom/div #js {:className "upload"}
-                (dom/h1 nil "CSV Import")
-                (dom/p nil (str "Upload of " (:file-name csv-upload) " was canceled.")))
-
-       :done
-       (dom/div #js {:className "upload"}
-                (dom/h1 nil "CSV Import")
-                (dom/p nil (str "Import complete! "
-                                (:import-count csv-upload) " records were imported. "
-                                (:error-count csv-upload) " records failed to import. "
-                                (gstring/format "$%.2f" (/ (:revenue csv-upload) 100)) " of revenue imported.")))
-
-       ;; default
-       (dom/div #js {:className "upload"}
-                (dom/h1 nil "CSV Import")
-                (dom/span #js {:className (str "file-input btn btn-primary btn-file")}
-                          "Select File"
-                          (dom/input #js {:type "file"
-                                          :onChange (fn [e]
-                                                      (let [file (aget (.-files (.-target e)) 0)]
-                                                        (send-file file csv-upload)))})))))))
-
+(defmethod upload-view :default
+  [csv-upload owner]
+  (reify
+    om/IRender
+    (render [this]
+     (dom/span #js {:className (str "file-input btn btn-primary btn-file")}
+               "Select File"
+               (dom/input #js {:type "file"
+                               :onChange (fn [e]
+                                           (let [file (aget (.-files (.-target e)) 0)]
+                                             (send-file file csv-upload)))})))))
 
 (defn app-view [app owner]
   (dom/div #js {:className "container"}
-           (if-not (:whoami app)
-             (om/build logins-view (:oauth-providers app))
-             (om/build upload-view (:csv-upload app)))))
-
+           (dom/div #js {:className "upload"}
+                    (dom/h1 nil "CSV Import")
+                    (om/build upload-view (:csv-upload app)))))
 
 (defn insert-root-component! [target]
   (om/root app-view

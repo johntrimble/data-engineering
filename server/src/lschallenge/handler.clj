@@ -13,7 +13,8 @@
             [clojure.tools.logging :as log]
             [ring.middleware.json :as middleware])
   (:import [java.util Properties]
-           [com.jolbox.bonecp BoneCPDataSource]))
+           [com.jolbox.bonecp BoneCPDataSource])
+  (:gen-class))
 
 (def expected-header ["purchaser name"
                       "item description"

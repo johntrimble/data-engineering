@@ -15,6 +15,8 @@
   :plugins [[lein-ring "0.8.10"]
             [speclj "3.0.2"]]
   :test-paths ["spec"]
+  :aot  [lschallenge.handler]
+  :main lschallenge.handler
   :ring {:handler lschallenge.handler/app
          :port 4000}
   :profiles
