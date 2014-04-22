@@ -1,7 +1,8 @@
 (ns lschallenge.client.core
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
-            [goog.net.XhrIo :as XhrIo]))
+            [goog.string :as gstring]
+            [goog.string.format]))
 
 (def app-state (atom {:whoami {:name "Bob Bobber"}
                       :oauth-providers [{:type :googleplus}
@@ -36,6 +37,7 @@
               (apply dom/div nil
                      (om/build-all login-provider-view providers))))))
 
+;; WARNING: The following function is horrifying
 (defn send-file [file csv-upload]
   (let [xhr (js/XMLHttpRequest.)
         fd (js/FormData.)]
@@ -53,12 +55,6 @@
                             (om/transact! csv-upload :loaded
                                           (fn [_] (.-loaded %))))
                          false)
-      (.addEventListener "load"
-                         #(om/transact! csv-upload
-                                        (fn [oldstate]
-                                          (merge oldstate {:loaded (:size oldstate)
-                                                           :status :done})))
-                         false)
       (.addEventListener "error"
                          #(om/transact! csv-upload
                                         (fn [oldstate]
@@ -72,6 +68,22 @@
                          false))
     (doto xhr
       (.open "POST" "/api/upload", true)
+      (.addEventListener "readystatechange"
+                         (fn [e]
+                           (when (= 4 (aget xhr "readyState"))
+                             (let [status (aget xhr "status")]
+                               (if (and (< status 300) (>= status 200))
+                                 ;; proccessing successful!
+                                 (om/transact! csv-upload
+                                               (fn [oldstate]
+                                                 (merge oldstate
+                                                        (js->clj (js/JSON.parse (aget xhr "responseText"))
+                                                                 :keywordize-keys true)
+                                                        {:status :done})))
+                                 ;; not so successful
+                                 (om/transact! csv-upload
+                                               (fn [oldstate]
+                                                 (merge oldstate {:status :error}))))))))
       (.send fd))))
 
 (defn upload-view [csv-upload owner]
@@ -99,10 +111,10 @@
                                          :style #js {:width (str percent-str "%")}}
                                     (str percent-str "%")))))
 
-       :done
+       :upload-finished
        (dom/div #js {:className "upload"}
                 (dom/h1 nil "CSV Import")
-                (dom/p nil (str "Done uploading " (:file-name csv-upload) ".")))
+                (dom/p nil (str "Done uploading " (:file-name csv-upload) ". Waiting for import job to complete...")))
 
 
        :error
@@ -111,9 +123,17 @@
                 (dom/p nil (str "Could not upload " (:file-name csv-upload) ".")))
 
        :abort
-              (dom/div #js {:className "upload"}
+       (dom/div #js {:className "upload"}
                 (dom/h1 nil "CSV Import")
                 (dom/p nil (str "Upload of " (:file-name csv-upload) " was canceled.")))
+
+       :done
+       (dom/div #js {:className "upload"}
+                (dom/h1 nil "CSV Import")
+                (dom/p nil (str "Import complete! "
+                                (:import-count csv-upload) " records were imported. "
+                                (:error-count csv-upload) " records failed to import. "
+                                (gstring/format "$%.2f" (/ (:revenue csv-upload) 100)) " of revenue imported.")))
 
        ;; default
        (dom/div #js {:className "upload"}
