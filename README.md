@@ -39,7 +39,7 @@ After optionally building a client distribution, run the following from the proj
 cd server
 lein uberjar
 ```
-You can then execute the genearted JAR file by running the following:
+You can then execute the generated JAR file by running the following:
 
 ```
 java -jar target/lschallenge-0.1.0-SNAPSHOT-standalone.jar
@@ -48,7 +48,7 @@ java -jar target/lschallenge-0.1.0-SNAPSHOT-standalone.jar
 This will start a Jetty server accessible at [http://localhost:4000/](http://localhost:4000/).
 
 ## Build and Run Application for Development
-During development, it is convenient to be able to edit HTML/CSS/JS/etc. files without having to manually run a build or refresh a browser window. The following instructions will describe how to run both the client and server to better faciliate rapid development.
+During development, it is convenient to be able to edit HTML/CSS/JS/etc. files without having to manually run a build or refresh a browser window. The following instructions will describe how to run both the client and server to better facilitate rapid development.
 
 You'll need at least two terminals. From one, execute the following from the project root to start up the server for development:
 
@@ -113,10 +113,10 @@ lein test
 ```
 
 - The count must be whole number containing no fractional component (e.g. 10 is allowed, 10.1 or 10.0 are not).
-- Purchasers and merchants are deduped via their name.
-- Addresses are deduped via the address string.
-- Items are deduped by their description and price.
-- Purchases are not deduped.
+- Purchasers and merchants are de-duped via their name.
+- Addresses are de-duped via the address string.
+- Items are de-duped by their description and price.
+- Purchases are not de-duped.
 - No attempt is made to parse a person or a merchants name (e.g. names will not be split into first/last names).
 - No attempt is made to parse addresses.
 - If errors are present in the CSV, a "best effort" will be made to import as much of the data as possible.
