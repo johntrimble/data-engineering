@@ -1382,11 +1382,11 @@ if((m == null))
 } else
 {return om.core.get_shared.cljs$core$IFn$_invoke$arity$1(om.core._STAR_parent_STAR_);
 }
-})();var pure__5425__auto__ = (new om.core.Pure({"__om_shared": shared, "__om_cursor": cursor},(function (this$){var _STAR_read_enabled_STAR_6686 = om.core._STAR_read_enabled_STAR_;try{om.core._STAR_read_enabled_STAR_ = true;
+})();var pure__4988__auto__ = (new om.core.Pure({"__om_shared": shared, "__om_cursor": cursor},(function (this$){var _STAR_read_enabled_STAR_6686 = om.core._STAR_read_enabled_STAR_;try{om.core._STAR_read_enabled_STAR_ = true;
 return (f.cljs$core$IFn$_invoke$arity$2 ? f.cljs$core$IFn$_invoke$arity$2(cursor,this$) : f.call(null,cursor,this$));
 }finally {om.core._STAR_read_enabled_STAR_ = _STAR_read_enabled_STAR_6686;
-}})));pure__5425__auto__.constructor = goog.getUid(f);
-return pure__5425__auto__;
+}})));pure__4988__auto__.constructor = goog.getUid(f);
+return pure__4988__auto__;
 } else
 {if(cljs.core.constant$keyword$6)
 {var map__6687 = m;var map__6687__$1 = ((cljs.core.seq_QMARK_(map__6687))?cljs.core.apply.cljs$core$IFn$_invoke$arity$2(cljs.core.hash_map,map__6687):map__6687);var opts = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__6687__$1,cljs.core.constant$keyword$27);var init_state = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__6687__$1,cljs.core.constant$keyword$21);var state = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__6687__$1,cljs.core.constant$keyword$22);var key = cljs.core.get.cljs$core$IFn$_invoke$arity$2(map__6687__$1,cljs.core.constant$keyword$25);var dataf = cljs.core.get.cljs$core$IFn$_invoke$arity$2(m,cljs.core.constant$keyword$28);var cursor_SINGLEQUOTE_ = ((!((dataf == null)))?(dataf.cljs$core$IFn$_invoke$arity$1 ? dataf.cljs$core$IFn$_invoke$arity$1(cursor) : dataf.call(null,cursor)):cursor);var rkey = ((!((key == null)))?cljs.core.get.cljs$core$IFn$_invoke$arity$2(cursor_SINGLEQUOTE_,key):cljs.core.get.cljs$core$IFn$_invoke$arity$2(m,cljs.core.constant$keyword$23));var shared = (function (){var or__3443__auto__ = cljs.core.constant$keyword$26.cljs$core$IFn$_invoke$arity$1(m);if(cljs.core.truth_(or__3443__auto__))
@@ -1394,14 +1394,14 @@ return pure__5425__auto__;
 } else
 {return om.core.get_shared.cljs$core$IFn$_invoke$arity$1(om.core._STAR_parent_STAR_);
 }
-})();var pure__5425__auto__ = (new om.core.Pure({"key": rkey, "__om_shared": shared, "__om_state": state, "__om_init_state": init_state, "__om_index": cljs.core.constant$keyword$24.cljs$core$IFn$_invoke$arity$1(m), "__om_cursor": cursor_SINGLEQUOTE_},(((opts == null))?(function (this$){var _STAR_read_enabled_STAR_6688 = om.core._STAR_read_enabled_STAR_;try{om.core._STAR_read_enabled_STAR_ = true;
+})();var pure__4988__auto__ = (new om.core.Pure({"key": rkey, "__om_shared": shared, "__om_state": state, "__om_init_state": init_state, "__om_index": cljs.core.constant$keyword$24.cljs$core$IFn$_invoke$arity$1(m), "__om_cursor": cursor_SINGLEQUOTE_},(((opts == null))?(function (this$){var _STAR_read_enabled_STAR_6688 = om.core._STAR_read_enabled_STAR_;try{om.core._STAR_read_enabled_STAR_ = true;
 return (f.cljs$core$IFn$_invoke$arity$2 ? f.cljs$core$IFn$_invoke$arity$2(cursor_SINGLEQUOTE_,this$) : f.call(null,cursor_SINGLEQUOTE_,this$));
 }finally {om.core._STAR_read_enabled_STAR_ = _STAR_read_enabled_STAR_6688;
 }}):(function (this$){var _STAR_read_enabled_STAR_6689 = om.core._STAR_read_enabled_STAR_;try{om.core._STAR_read_enabled_STAR_ = true;
 return (f.cljs$core$IFn$_invoke$arity$3 ? f.cljs$core$IFn$_invoke$arity$3(cursor_SINGLEQUOTE_,this$,opts) : f.call(null,cursor_SINGLEQUOTE_,this$,opts));
 }finally {om.core._STAR_read_enabled_STAR_ = _STAR_read_enabled_STAR_6689;
-}}))));pure__5425__auto__.constructor = goog.getUid(f);
-return pure__5425__auto__;
+}}))));pure__4988__auto__.constructor = goog.getUid(f);
+return pure__4988__auto__;
 } else
 {return null;
 }

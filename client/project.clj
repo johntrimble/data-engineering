@@ -23,14 +23,14 @@
                                                             :non-standard-jsdoc :off}}}}}}}
 
   :cljsbuild {:builds {:client
-                       {:source-paths ["src/common" "src/client" "src/client-bootstrap"]
+                       {:source-paths ["src/client" "src/client-bootstrap"]
                         :compiler {:output-to "target/public/scripts/main.js"
                                    :output-dir "target/public/scripts/out"
                                    :source-map "target/public/scripts/main.js.map"
                                    :language-in :ecmascript5
                                    :optimizations :whitespace}}
                        :client-test
-                       {:source-paths ["src/common" "src/client" "test/client"]
+                       {:source-paths ["src/client" "test/client"]
                         :compiler {:output-to "target/test/client/main.js"
                                    :output-dir "target/test/client/out"
                                    :source-map "target/test/client/main.js.map"
