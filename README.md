@@ -99,7 +99,7 @@ From the project root, execute the following:
 
 ```
 cd server
-lein test
+lein spec
 ```
 
 ## Notes on CSV Upload

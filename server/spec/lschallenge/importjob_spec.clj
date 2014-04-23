@@ -1,10 +1,12 @@
-(ns lschallenge.handlerspec
-  (:require [speclj.core :refer :all]
+(ns lschallenge.importjob-spec
+  (:require [lschallenge.ds :as ds]
+            [lschallenge.importjob :as job]
+            [lschallenge.dao :as dao]
+            [speclj.core :refer :all]
             [lschallenge.handler :as handler]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
-            [speclj.run.standard]
-            [lschallenge.ds :as ds]))
+            [speclj.run.standard]))
 
 (def csv-string "purchaser name	item description	item price	purchase count	merchant address	merchant name
 Snake Plissken	$10 off $20 of food	10.4	2	987 Fake St	Bob's Pizza
@@ -14,7 +16,7 @@ Marty McFly	$20 Sneakers for $5	5.0	1	123 Fake St	Sneaker Store Emporium
 Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
 
 (describe "read-import-data"
-          (with records (handler/read-import-data csv-string))
+          (with records (job/read-import-data csv-string))
 
           (it "produces a seq of records"
                 (should (seq? @records)))
@@ -40,11 +42,11 @@ Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
 
           (it "throws an IllegalArgumentException if the header is wrong"
               (should-throw IllegalArgumentException
-                            (handler/read-import-data "purchaser name	bad column name	item price	purchase count	merchant address	merchant name\nSnake Plissken	$10 off $20 of food	10.4	2	987 Fake St	Bob's Pizza"))))
+                            (job/read-import-data "purchaser name	bad column name	item price	purchase count	merchant address	merchant name\nSnake Plissken	$10 off $20 of food	10.4	2	987 Fake St	Bob's Pizza"))))
 
 (describe "generate-import-report"
           (with report
-            (handler/generate-import-report [{:purchaser "Bob Bobber"
+            (job/generate-import-report [{:purchaser "Bob Bobber"
                                               :item "Self Sealing Stem Bolts"
                                               :price 1000
                                               :count 2
@@ -87,7 +89,7 @@ Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
                         (try
                           (with-open [output (io/writer temp-file)]
                             (.write output csv-string))
-                          (handler/import-file ds/db temp-file)
+                          (job/import-file ds/db temp-file)
                           (finally (io/delete-file temp-file true)))))
 
           (with data (ds/dump-db ds/db))
@@ -106,7 +108,7 @@ Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
 
           (it "associates merchants with their address"
               (let [id (:id
-                        (handler/get-or-create-person
+                        (dao/get-or-create-person
                          ds/db
                          {:name "Sneaker Store Emporium"}))
                     address (-> (group-by :person_id (-> @data
@@ -118,5 +120,3 @@ Snake Plissken	$20 Sneakers for $5	5.0	4	123 Fake St	Sneaker Store Emporium")
                 (should= "123 Fake St" address)))
 
           (after-all (ds/drop-data ds/db)))
-
-(run-specs)
