@@ -21,8 +21,15 @@
     (doto (.-upload xhr)
       (.addEventListener "progress"
                          #(if (.-lengthComputable %)
-                            (om/transact! csv-upload :loaded
-                                          (fn [_] (.-loaded %))))
+                            (om/transact! csv-upload
+                                          (fn [oldstate]
+                                            (js/console.log "Loaded: " (.-loaded %))
+                                            (js/console.log "Size: " (:size oldstate))
+                                            (if (and (= (:status oldstate) :uploading)
+                                                     (>= (.-loaded %) (:size oldstate)))
+                                              (merge oldstate {:status :upload-finished
+                                                               :loaded (.-loaded %)})
+                                              (merge oldstate {:loaded (.-loaded %)})))))
                          false)
       (.addEventListener "error"
                          #(om/transact! csv-upload
@@ -32,8 +39,7 @@
                          false)
       (.addEventListener "abort" #(om/transact! csv-upload
                                                 (fn [oldstate]
-                                                  (merge oldstate {:loaded (:size oldstate)
-                                                                   :status :abort})))
+                                                  (merge oldstate {:status :abort})))
                          false))
     (doto xhr
       (.open "POST" "/api/upload", true)
@@ -71,21 +77,31 @@
                             (/ loaded size)
                             0.0)
                   percent-str (str (int (* 100 percent)))]
-              (dom/div #js {:className "progress"}
-                       (dom/div #js {:className "progress-bar"
-                                     :role "progressbar"
-                                     :aria-valuenow percent-str
-                                     :aria-value-min "0"
-                                     :aria-value-max "100"
-                                     :style #js {:width (str percent-str "%")}}
-                                (str percent-str "%")))))))
+              (dom/div nil
+                       (dom/p nil (str "Uploading file " (:file-name csv-upload) "."))
+                       (dom/div #js {:className "progress"}
+                                (dom/div #js {:className "progress-bar"
+                                              :role "progressbar"
+                                              :aria-valuenow percent-str
+                                              :aria-value-min "0"
+                                              :aria-value-max "100"
+                                              :style #js {:width (str percent-str "%")}}
+                                         (str percent-str "%"))))))))
 
 (defmethod upload-view :upload-finished
   [csv-upload owner]
   (reify
     om/IRender
     (render [this]
-     (dom/p nil (str "Done uploading " (:file-name csv-upload) ". Waiting for import job to complete...")))))
+            (dom/div nil
+                     (dom/p nil (str "Done uploading " (:file-name csv-upload) ". Waiting for import job to complete..."))
+                     (dom/div #js {:className "progress progress-striped active"}
+                              (dom/div #js {:className "progress-bar"
+                                            :role "progressbar"
+                                            :aria-valuenow "100"
+                                            :aria-value-min "0"
+                                            :aria-value-max "100"
+                                            :style #js {:width "100%"}}))))))
 
 (defmethod upload-view :error
   [csv-upload owner]
@@ -129,12 +145,12 @@
   (reify
     om/IRender
     (render [this]
-     (dom/span #js {:className (str "file-input btn btn-primary btn-file")}
-               "Select File"
-               (dom/input #js {:type "file"
-                               :onChange (fn [e]
-                                           (let [file (aget (.-files (.-target e)) 0)]
-                                             (send-file file csv-upload)))})))))
+            (dom/span #js {:className (str "file-input btn btn-primary btn-file")}
+                      "Select File"
+                      (dom/input #js {:type "file"
+                                      :onChange (fn [e]
+                                                  (let [file (aget (.-files (.-target e)) 0)]
+                                                    (send-file file csv-upload)))})))))
 
 (defn app-view [app owner]
   (dom/div #js {:className "container"}
