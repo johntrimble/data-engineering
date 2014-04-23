@@ -5,9 +5,9 @@ This is to fulfill the following: [https://github.com/lschallenges/data-engineer
 The solution uses ClojureScript with Om and Bootstrap for the front-end and Clojure with Compojure for the backend. It uses an in memory [HSQLDB](http://hsqldb.org/) relational database to store imported data. The choice of database was made to better facilitate running and evaluating the application and application code.
 
 * [Requirements](#requirements)
-* [Build Client Distribution](#build-client-distribution)
+* [Build Client Distribution](#build-client-distribution-optional)
 * [Package and Run Application](#package-and-run-application)
-* [Build and Run Application for Development](build-and-run-application-for-development)
+* [Build and Run Application for Development](#build-and-run-application-for-development)
 * [Run Tests](#run-tests)
 * [Notes on CSV Upload](#notes-on-csv-upload)
 * [Browser Support](#browser-support)
