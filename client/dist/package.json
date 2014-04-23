@@ -1,0 +1,16 @@
+{
+  "name": "lschallenge",
+  "version": "0.0.0",
+  "private": true,
+  "engine": {
+    "node": "~0.10"
+  },
+  "dependencies": {
+    "express": "~3.4.8",
+    "source-map-support": "~0.2.5",
+    "node-uuid": "^1.4.1"
+  },
+  "scripts": {
+    "start": "./node_modules/supervisor/lib/cli-wrapper.js -w target/server/main.js -n -- target/server/main.js"
+  }
+}
