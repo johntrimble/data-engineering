@@ -2,12 +2,16 @@
   (:require [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [goog.string :as gstring]
+            [clojure.string :as str]
             [goog.string.format]))
 
 (def app-state (atom {:csv-upload {:status :upload}}))
 
 ;; WARNING: The following function is horrifying
-(defn send-file [file csv-upload]
+(defn send-file
+  "Given a file and a csv-upload ref, uploads the file to the server and
+  updates the csv-upload appropriately."
+  [file csv-upload]
   (let [xhr (js/XMLHttpRequest.)
         fd (js/FormData.)]
     (om/transact! csv-upload (fn [oldstate]
@@ -23,8 +27,6 @@
                          #(if (.-lengthComputable %)
                             (om/transact! csv-upload
                                           (fn [oldstate]
-                                            (js/console.log "Loaded: " (.-loaded %))
-                                            (js/console.log "Size: " (:size oldstate))
                                             (if (and (= (:status oldstate) :uploading)
                                                      (>= (.-loaded %) (:size oldstate)))
                                               (merge oldstate {:status :upload-finished
@@ -62,8 +64,47 @@
                            false))
       (.send fd))))
 
-(defn reset-file-upload [csv-upload]
+(defn reset-file-upload
+  "Resets csv-upload to the initial state."
+  [csv-upload]
   (om/transact! csv-upload (fn [_] {:status :upload})))
+
+
+;; as far as I can tell, goog.string.format is insufficient to replace the
+;; following two functions.
+
+(defn format-number
+  "Given an integer or a string representing an integer, returns a nicely
+  formatted version of the integer."
+  [n]
+  (let [n-str (if (string? n) n (str n))]
+    (->> n-str
+         reverse
+         (partition 3 3 nil)
+         (map (partial filter identity))
+         (map (partial apply str))
+         (str/join ",")
+         reverse
+         (apply str))))
+
+(defn format-price
+  "Given an integer or string representing an amount of pennies, creates a
+  formatted string representing the dollar amount."
+  [pennies]
+  (let [pennies-str (if (string? pennies)
+                      pennies
+                      (str pennies))
+        change-str (apply str (reverse (take 2 (concat (reverse pennies-str) (repeat \0)))))
+        dollars-str (->> pennies-str
+                         reverse
+                         (drop 2)
+                         reverse
+                         (apply str)
+                         format-number)
+        dollars-str (if (str/blank? dollars-str)
+                      "0"
+                      dollars-str)]
+    (str "$" dollars-str "." change-str)))
 
 (defmulti upload-view (fn [csv-upload _] (:status csv-upload)))
 
@@ -133,9 +174,9 @@
             (dom/div nil
                      (dom/p nil
                             (str "Import complete! "
-                                 (:import-count csv-upload) " records were imported. "
-                                 (:error-count csv-upload) " records failed to import. "
-                                 (gstring/format "$%.2f" (/ (:revenue csv-upload) 100)) " of revenue imported."))
+                                 (format-number (:import-count csv-upload)) " records were imported. "
+                                 (format-number (:error-count csv-upload)) " records failed to import. "
+                                 (format-price (:revenue csv-upload)) " of revenue imported."))
                      (dom/p nil
                             (dom/a #js {:onClick #(reset-file-upload csv-upload)}
                                    "Upload another file?"))))))

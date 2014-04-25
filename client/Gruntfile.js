@@ -345,7 +345,8 @@ module.exports = function (grunt) {
     concurrent: {
       server: [
         'compass:server',
-        'copy:styles'
+        'copy:styles',
+        'bgShell:cljsBuildOnceClient'
       ],
       test: [
         'copy:styles'
